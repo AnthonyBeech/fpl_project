@@ -2,3 +2,4 @@
 mlproject.egg-info
 logs
 *__pycache__/
+notebooks/catboost_info
