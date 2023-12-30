@@ -1,3 +1,4 @@
 .env
 mlproject.egg-info
 logs
+src/__pycache__
