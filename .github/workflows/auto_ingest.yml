@@ -30,5 +30,5 @@ jobs:
         git config --local user.email "abeech123@virginmedia.com"
         git config --local user.name "AnthonyBeech"
         git add .
-        git commit -m "Automated ingestion"
+        git commit -m "Automated ingestion" || echo "No changes to commit"
         git push -u origin master
