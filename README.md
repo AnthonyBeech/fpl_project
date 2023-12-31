@@ -5,3 +5,4 @@
 * src/components/initial_data_ingestion.py
 * src/components/data_ingestion.py (Autoruns with github actions)
 * src/components/data_transformation.py
+* src/components/data_preperation.py

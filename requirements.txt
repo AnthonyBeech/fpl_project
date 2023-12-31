@@ -4,4 +4,6 @@ ipykernel
 requests
 matplotlib
 scikit-learn
+catboost
+xgboost
 -e .

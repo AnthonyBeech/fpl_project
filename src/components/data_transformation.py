@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+from sklearn.impute import SimpleImputer
+
 
 from src.exception import CustomException
 from src.logger import logging
@@ -57,6 +59,49 @@ class DataTransformer:
         ]
         self.data = self.data[keep_cols]
 
+    def adjust_col_vals(self):
+        epoch = pd.Timestamp("2015-01-01", tz="UTC")
+               
+        self.data["kickoff_time"] = (
+            (pd.to_datetime(self.data["kickoff_time"]) - epoch)
+            .astype("timedelta64[s]")
+            .astype(int)
+        )
+
+        int_cols = [
+            "assists",
+            "bonus",
+            "bps",
+            "clean_sheets",
+            "creativity",
+            "goals_conceded",
+            "goals_scored",
+            "ict_index",
+            "influence",
+            "kickoff_time",
+            "minutes",
+            "own_goals",
+            "penalties_missed",
+            "penalties_saved",
+            "red_cards",
+            "saves",
+            "team_a_score",
+            "team_h_score",
+            "threat",
+            "value",
+            "yellow_cards",
+            "starts",
+        ]  # list of integer columns
+
+        object_cols = ["was_home"]  # list of object/string columns
+
+        imputer = SimpleImputer(strategy="median")
+        self.data = pd.DataFrame(imputer.fit_transform(self.data), columns=self.data.columns)
+        
+        # Convert data types
+        self.data[int_cols] = self.data[int_cols].astype(int)
+        self.data[object_cols] = self.data[object_cols].astype(object)
+
     def merge_dataframes_side_by_side(self) -> None:
         """
         Merges DataFrame rows side by side, appending suffixes for overlapping columns.
@@ -92,19 +137,27 @@ def process_all_csv_files(directory: str, output_csv: str, overlap: int) -> None
     """
     logging.info(f"Processing files in {directory}")
 
-    for filename in os.listdir(directory):
-        if filename.endswith(".csv"):
-            try:
-                filepath = os.path.join(directory, filename)
-                transformer = DataTransformer(filepath, overlap)
-                transformer.keep_cols()
-                transformer.merge_dataframes_side_by_side()
-                transformer.append_df_to_csv(output_csv)
-            except Exception as e:
-                logging.error(f"Error in transformation: {e}")
+    if os.path.exists(output_csv):
+        logging.info(f"Deleting tmp {output_csv}")
+        os.remove(output_csv)
+    try:
+        for filename in os.listdir(directory):
+            if filename.endswith(".csv"):
+                try:
+                    filepath = os.path.join(directory, filename)
+                    transformer = DataTransformer(filepath, overlap)
+                    transformer.keep_cols()
+                    transformer.adjust_col_vals()
+                    transformer.merge_dataframes_side_by_side()
+                    transformer.append_df_to_csv(output_csv)
+                except Exception as e:
+                    logging.error(f"Error in transformation: {e}")
+
+    except Exception as e:
+        raise CustomException(e)
 
 
 if __name__ == "__main__":
     process_all_csv_files("data/latest/", "data/raw.csv", overlap=3)
-    
+
     logging.info(f"All files written to csv")
