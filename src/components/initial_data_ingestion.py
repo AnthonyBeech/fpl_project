@@ -4,6 +4,7 @@ import json
 import time
 import logging
 import os
+import shutil
 
 from src.exception import CustomException
 from src.logger import logging
@@ -68,7 +69,7 @@ class PlayerDataProcessor:
                 except:
                     logging.error(f"File does not exist: {nm}")
                     continue
-                    
+
                 most_recent_kickoff = df["kickoff_time"].max()
 
                 edata = self.get_individual_player_data(ID)
@@ -88,9 +89,25 @@ class PlayerDataProcessor:
             logging.error(f"Error in processing player data: {e}")
             raise CustomException(e)
 
+    def rename(self):
+        """
+        Renames the folder to data/latest
+        """
+        logging.info(f"Renaming to {self.data_dir}")
+        try:
+            if os.path.exists(self.data_dir):
+                logging.info(f"Deleting tmp {self.sum_dir}")
+                shutil.rmtree(self.data_dir)
+            os.rename(self.sum_dir, self.data_dir)
+
+        except Exception as e:
+            raise CustomException(e)
+
+        logging.info(f"Renamed to {self.data_dir}")
+
 
 if __name__ == "__main__":
     processor = PlayerDataProcessor(
-        "https://fantasy.premierleague.com/api/", "data/legacy/combined", "data/sum"
+        "https://fantasy.premierleague.com/api/", "data/legacy/combined", "data/latest"
     )
     processor.process_player_data()

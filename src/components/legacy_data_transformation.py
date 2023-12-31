@@ -58,6 +58,7 @@ class CsvExtractor:
         """
         Groups files by player name and combines them into single CSV files.
         """
+        logging.info(f"Grouping files together in {self.extracted_dir}")
         try:
             file_groups = defaultdict(list)
             for file_path in glob.glob(os.path.join(self.extracted_dir, "*.csv")):
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     extractor = CsvExtractor(years, "data/legacy/extracted/", "data/legacy/combined/")
 
     for year in years:
-        source_dir = f"../data/legacy/20{year}-{year+1}/players/"
+        source_dir = f"data/legacy/20{year}-{year+1}/players/"
         extractor.extract_copy_csv(year, source_dir)
 
     extractor.group_and_combine_files()

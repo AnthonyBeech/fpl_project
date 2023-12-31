@@ -1,5 +1,7 @@
 import requests
 import json
+import os
+import shutil
 
 from initial_data_ingestion import PlayerDataProcessor
 from src.exception import CustomException
@@ -56,6 +58,8 @@ class CheckApiForChanges:
         """
         new_data = self.fetch_data()
         return self.is_data_changed(new_data)
+    
+        
 
 
 if __name__ == "__main__":
@@ -66,9 +70,10 @@ if __name__ == "__main__":
             logging.info(f"Adding changes to latest dataset")
             
             data_processor = PlayerDataProcessor(
-                "https://fantasy.premierleague.com/api/", "data/sum", "data/latest"
+                "https://fantasy.premierleague.com/api/", "data/latest", "data/sum"
             )
             data_processor.process_player_data()
+            data_processor.rename()
             
             logging.info(f"Changes added to latest dataset")
             
