@@ -49,7 +49,7 @@ class CsvExtractor:
                         filepath, os.path.join(self.extracted_dir, new_filename)
                     )
 
-            logging.info(f"Processing year {year} completed")
+            logging.info(f"Processing year {year} completed.")
         except Exception as e:
             logging.error(f"Error processing year {year}: {e}")
             raise CustomException(e)
