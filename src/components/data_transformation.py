@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from sklearn.impute import SimpleImputer
-
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from src.exception import CustomException
 from src.logger import logging
@@ -61,7 +61,7 @@ class DataTransformer:
 
     def adjust_col_vals(self):
         epoch = pd.Timestamp("2015-01-01", tz="UTC")
-               
+
         self.data["kickoff_time"] = (
             (pd.to_datetime(self.data["kickoff_time"]) - epoch)
             .astype("timedelta64[s]")
@@ -96,8 +96,10 @@ class DataTransformer:
         object_cols = ["was_home"]  # list of object/string columns
 
         imputer = SimpleImputer(strategy="median")
-        self.data = pd.DataFrame(imputer.fit_transform(self.data), columns=self.data.columns)
-        
+        self.data = pd.DataFrame(
+            imputer.fit_transform(self.data), columns=self.data.columns
+        )
+
         # Convert data types
         self.data[int_cols] = self.data[int_cols].astype(int)
         self.data[object_cols] = self.data[object_cols].astype(object)
@@ -157,7 +159,44 @@ def process_all_csv_files(directory: str, output_csv: str, overlap: int) -> None
         raise CustomException(e)
 
 
-if __name__ == "__main__":
-    process_all_csv_files("data/latest/", "data/raw.csv", overlap=3)
+class DataProcessor:
+    def __init__(self, filename, target_col):
+        self.df = pd.read_csv(filename)  # .iloc[0:1000]
+        self.target_col = target_col
 
-    logging.info(f"All files written to csv")
+    def process(self):
+        X = self.df.drop(self.target_col, axis=1)
+
+        cols_to_drop = [col for col in X.columns if col.endswith("_2")]
+        X = X.drop(cols_to_drop, axis=1)
+
+        y = self.df[self.target_col]
+
+        logging.info(f"Splitting into numerical and catagorical")
+        X_cat = X.select_dtypes(include=["object"])
+        X_num = X.select_dtypes(exclude=["object"])
+
+        logging.info(f"Processing")
+        X_cat_processed = CategoricalProcessor().process(X_cat)
+        X_num_processed = NumericalProcessor().process(X_num)
+
+        logging.info(f"Merging")
+        X_processed = pd.concat([X_cat_processed, X_num_processed], axis=1)
+
+        return X_processed, y
+
+
+class CategoricalProcessor:
+    def process(self, X_cat):
+        encoder = OneHotEncoder(sparse_output=False)
+        X_cat_encoded = encoder.fit_transform(X_cat)
+        return pd.DataFrame(
+            X_cat_encoded, columns=encoder.get_feature_names_out(X_cat.columns)
+        )
+
+
+class NumericalProcessor:
+    def process(self, X_num):
+        scaler = StandardScaler()
+        X_num_scaled = scaler.fit_transform(X_num)
+        return pd.DataFrame(X_num_scaled, columns=X_num.columns)

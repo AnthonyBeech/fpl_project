@@ -4,3 +4,4 @@ logs
 *__pycache__/
 notebooks
 data/legacy
+catboost_info

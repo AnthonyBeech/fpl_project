@@ -1,5 +1,7 @@
 import sys
 import pandas as pd
+import shutil
+import os
 
 from catboost import CatBoostRegressor
 from sklearn.ensemble import (
@@ -23,6 +25,9 @@ class ModelTrainer:
     def __init__(self, data_loc, model_loc):
         self.data_loc = data_loc
         self.model_loc = model_loc
+        if os.path.exists("plots"):
+            logging.info(f"Deleting tmp plots")
+            shutil.rmtree("plots")
 
     def initiate_model_trainer(self):
         try:
@@ -37,6 +42,7 @@ class ModelTrainer:
             )
 
             logging.info("Setting up models and params")
+            
             models = {
                 "Random Forest": RandomForestRegressor(),
                 "Decision Tree": DecisionTreeRegressor(),
@@ -46,6 +52,8 @@ class ModelTrainer:
                 "CatBoosting Regressor": CatBoostRegressor(verbose=False),
                 "AdaBoost Regressor": AdaBoostRegressor(),
             }
+        
+            
             params = {
                 "Decision Tree": {
                     "criterion": [
@@ -109,19 +117,10 @@ class ModelTrainer:
             ]
             best_model = models[best_model_name]
 
-            if best_model_score < 0.6:
-                raise CustomException("No best model found")
-            logging.info(f"Best found model on both training and testing dataset")
-
             save_object(
                 file_path=self.model_loc,
                 obj=best_model,
             )
-
-            predicted = best_model.predict(X_test)
-
-            r2_square = r2_score(y_test, predicted)
-            return r2_square, model_report
 
         except Exception as e:
             raise CustomException(e)
@@ -129,6 +128,5 @@ class ModelTrainer:
 
 if __name__ == "__main__":
     model_trainer = ModelTrainer("data/", "data/model.pkl")
-    best_score, report = model_trainer.initiate_model_trainer()
-    logging.info(best_score)
-    logging.info(report)
+    model_trainer.initiate_model_trainer()
+    logging.info("FInished.")

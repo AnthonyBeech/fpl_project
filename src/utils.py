@@ -1,62 +1,78 @@
-    import os
-    import sys
+import os
+import sys
 
-    import pickle
-    from sklearn.metrics import r2_score
-    from sklearn.model_selection import GridSearchCV
+import pickle
+from sklearn.metrics import r2_score
+from sklearn.model_selection import GridSearchCV
 
-    from src.exception import CustomException
-    from src.logger import logging
-    
-    
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import numpy as np
-    from sklearn.model_selection import learning_curve
+from src.exception import CustomException
+from src.logger import logging
 
 
-
-    def save_object(file_path, obj):
-        try:
-            dir_path = os.path.dirname(file_path)
-
-            os.makedirs(dir_path, exist_ok=True)
-
-            with open(file_path, "wb") as file_obj:
-                pickle.dump(obj, file_obj)
-
-        except Exception as e:
-            raise CustomException(e, sys)
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from sklearn.model_selection import learning_curve
 
 
-    def evaluate_models(X_train, y_train, X_test, y_test, models, param):
-        try:
-            report = {}
 
-            for i in range(len(list(models))):
-                model = list(models.values())[i]
-                logging.info(f"Testing model: {model}")
-                
-                para = param[list(models.keys())[i]]
+def save_object(file_path, obj):
+    try:
+        dir_path = os.path.dirname(file_path)
 
-                gs = GridSearchCV(model, para, cv=3)
-                gs.fit(X_train, y_train)
+        os.makedirs(dir_path, exist_ok=True)
 
-                model.set_params(**gs.best_params_)
-                model.fit(X_train, y_train)
+        with open(file_path, "wb") as file_obj:
+            pickle.dump(obj, file_obj)
 
-                logging.info(f"Predicting with model: {model}")
-                y_train_pred = model.predict(X_train)
+    except Exception as e:
+        raise CustomException(e, sys)
 
-                y_test_pred = model.predict(X_test)
 
-                train_model_score = r2_score(y_train, y_train_pred)
+def save_plot(plot, file_name):
+    plot_dir = "plots/"
+    os.makedirs(plot_dir, exist_ok=True)
+    plot_path = os.path.join(plot_dir, file_name)
+    plot.savefig(plot_path)
 
-                test_model_score = r2_score(y_test, y_test_pred)
-                logging.info(f"Adding model to report: {model}")
-                report[list(models.keys())[i]] = test_model_score
 
-            return report
+def evaluate_models(X_train, y_train, X_test, y_test, models, param):
+    try:
+        report = {}
 
-        except Exception as e:
-            raise CustomException(e, sys)
+        for model_name, model in models.items():
+            logging.info(f"Testing model: {model}")
+
+            para = param[model_name]
+
+            gs = GridSearchCV(model, para, cv=3)
+            gs.fit(X_train, y_train)
+
+            best_model = gs.best_estimator_
+            best_model.fit(X_train, y_train)
+
+            logging.info(f"Predicting with model: {best_model}")
+            y_train_pred = best_model.predict(X_train)
+            y_test_pred = best_model.predict(X_test)
+
+            # Plotting Predicted vs True values
+            plt.figure(figsize=(10, 6))
+            sns.scatterplot(x=y_test, y=y_test_pred)
+            plt.xlabel('True Values')
+            plt.ylabel('Predictions')
+            plt.title(f'Predicted vs True Values - {model_name}')
+            save_plot(plt, f"predicted_vs_true_{model_name}.png")
+
+            # Variance-Bias Analysis
+            # [Optional: Code to plot variance-bias analysis]
+
+            train_model_score = r2_score(y_train, y_train_pred)
+            test_model_score = r2_score(y_test, y_test_pred)
+            logging.info(f"Adding model to report: {model_name}")
+            report[model_name] = test_model_score
+
+        return report
+
+    except Exception as e:
+        raise CustomException(e, sys)
+
