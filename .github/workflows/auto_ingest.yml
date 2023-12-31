@@ -35,3 +35,7 @@ jobs:
         git add .
         git commit -m "Automated ingestion" || echo "No changes to commit"
         git push -u origin master
+
+    - name: Pull Changes from Remote
+      run: |
+        git pull origin master
