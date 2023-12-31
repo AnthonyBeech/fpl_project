@@ -2,5 +2,5 @@
 fpl_project.egg-info
 logs
 *__pycache__/
-notebooks/catboost_info
+notebooks
 data/legacy
