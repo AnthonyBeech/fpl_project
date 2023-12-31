@@ -1,5 +1,5 @@
 .env
-mlproject.egg-info
+fpl_project.egg-info
 logs
 *__pycache__/
 notebooks/catboost_info
