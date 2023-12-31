@@ -2,7 +2,7 @@ name: Auto ingest from fpl API wh
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   schedule:
     - cron:  '0 0 * * *'  # Runs at midnight every day
 
