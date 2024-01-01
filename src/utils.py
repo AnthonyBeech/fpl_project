@@ -16,18 +16,6 @@ from sklearn.model_selection import learning_curve
 
 
 
-def save_object(file_path, obj):
-    try:
-        dir_path = os.path.dirname(file_path)
-
-        os.makedirs(dir_path, exist_ok=True)
-
-        with open(file_path, "wb") as file_obj:
-            pickle.dump(obj, file_obj)
-
-    except Exception as e:
-        raise CustomException(e, sys)
-
 
 def save_plot(plot, file_name):
     plot_dir = "plots/"
@@ -61,6 +49,11 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
             plt.xlabel('True Values')
             plt.ylabel('Predictions')
             plt.title(f'Predicted vs True Values - {model_name}')
+
+            # Add a line where x equals y
+            plt.plot(y_test, y_test, color='red', linestyle='--')  # Add this line
+
+            # Save the plot
             save_plot(plt, f"predicted_vs_true_{model_name}.png")
 
             # Variance-Bias Analysis

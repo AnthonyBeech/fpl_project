@@ -93,7 +93,7 @@ class DataTransformer:
             "starts",
         ]  # list of integer columns
 
-        object_cols = ["was_home"]  # list of object/string columns
+        object_cols = ["was_home",]  # list of object/string columns
 
         imputer = SimpleImputer(strategy="median")
         self.data = pd.DataFrame(
@@ -161,15 +161,18 @@ def process_all_csv_files(directory: str, output_csv: str, overlap: int) -> None
 
 class DataProcessor:
     def __init__(self, filename, target_col):
-        self.df = pd.read_csv(filename)  # .iloc[0:1000]
+        self.df = pd.read_csv(filename).iloc[0:1000]
         self.target_col = target_col
 
     def process(self):
+        
+        self.df = self.df[self.df[self.target_col] >= 0]
         X = self.df.drop(self.target_col, axis=1)
 
-        cols_to_drop = [col for col in X.columns if col.endswith("_2")]
+        ender = "_" + self.target_col.rsplit("_")[-1]
+        cols_to_drop = [col for col in X.columns if col.endswith(ender)]
         X = X.drop(cols_to_drop, axis=1)
-
+       
         y = self.df[self.target_col]
 
         logging.info(f"Splitting into numerical and catagorical")

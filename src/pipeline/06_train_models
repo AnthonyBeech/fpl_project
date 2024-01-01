@@ -1,0 +1,35 @@
+from dataclasses import dataclass
+
+from src.logger import logging
+from src.exception import CustomException
+
+from src.components.model_training import ModelTrainer
+
+
+@dataclass
+class Config:
+    data_dir: str = "data/"
+    model_dir: str = "data/model.pkl"
+    plot_dir: str = "plot/"
+    X_train_dir: str = "data/X_train.csv"
+    X_test_dir: str = "data/X_test.csv"
+    y_train_dir: str = "data/y_train.csv"
+    y_test_dir: str = "data/y_test.csv"
+
+
+cfg = Config
+
+
+if __name__ == "__main__":
+    logging.info("Training model.")
+
+    model_trainer = ModelTrainer(cfg.data_dir, cfg.model_dir, cfg.plot_dir)
+    try:
+        model_trainer.initiate_model_data()
+        model_trainer.initiate_model_params()
+        report = model_trainer.train_model()
+        logging.info(report)
+        logging.info("FInished.")
+
+    except Exception as e:
+        raise CustomException(e)
