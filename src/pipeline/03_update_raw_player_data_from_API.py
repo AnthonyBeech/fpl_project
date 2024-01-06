@@ -9,8 +9,8 @@ from src.components.data_ingestion import CheckApiForChanges, PlayerDataProcesso
 @dataclass
 class Config:
     base_url: str = "https://fantasy.premierleague.com/api/"
-    data_dir: str = "data/latest" 
-    sun_dir: str = "data/sum"
+    data_dir: str = "data/latest"  # This folder will store the latest gw data
+    sum_dir: str = "data/sum"  # THe folder will be used as a tmp folder to add the new data from the API
 
 
 cfg = Config
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     if api_checker.is_changed():
         logging.info(f"Adding changes to latest dataset")
 
-        data_processor = PlayerDataProcessor(cfg.base_url, cfg.comb_dir, cfg.lat_dir)
+        data_processor = PlayerDataProcessor(cfg.base_url, cfg.sum_dir, cfg.data_dir)
         try:
             data_processor.process_player_data()
             data_processor.rename()
