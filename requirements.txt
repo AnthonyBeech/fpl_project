@@ -7,4 +7,6 @@ scikit-learn
 catboost
 xgboost
 seaborn
+torch
+torchvision
 -e .

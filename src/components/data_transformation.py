@@ -161,7 +161,7 @@ def process_all_csv_files(directory: str, output_csv: str, overlap: int) -> None
 
 class DataProcessor:
     def __init__(self, filename, target_col):
-        self.df = pd.read_csv(filename).iloc[0:1000]
+        self.df = pd.read_csv(filename)  # .iloc[0:1000]
         self.target_col = target_col
 
     def process(self):
