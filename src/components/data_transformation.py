@@ -56,6 +56,7 @@ class DataTransformer:
             "was_home",
             "yellow_cards",
             "starts",
+            "position"
         ]
         self.data = self.data[keep_cols]
 
@@ -93,35 +94,97 @@ class DataTransformer:
             "starts",
         ]  # list of integer columns
 
-        object_cols = ["was_home",]  # list of object/string columns
+        object_cols = ["was_home",
+                       "position"]  # list of object/string columns
 
         imputer = SimpleImputer(strategy="median")
         self.data = pd.DataFrame(
             imputer.fit_transform(self.data), columns=self.data.columns
         )
+        
+        
 
+        # Add points
+        
+        self._calculate_points()
+        
+        
+        
         # Convert data types
         self.data[int_cols] = self.data[int_cols].astype(int)
         self.data[object_cols] = self.data[object_cols].astype(object)
+        
+        self.data = self.data[["kickoff_time", "ict_index", "points"]]
+        
+    def _calculate_points(self):
+        
+        def calculate_fpl_score(row):
+            score = 0
+            # GKP = 0, DEF = 1, MID = 2, FWD = 3
+
+            # Calculate score based on minutes played
+            minutes = row["minutes"]
+            if minutes <= 60:
+                score += 1
+            else:
+                score += 2
+
+            # Calculate score for goals and assists
+            if row["position"] == 0:
+                score += (row["goals_scored"] * 6) + (row["assists"] * 3)
+                score += row["clean_sheets"] * 4
+                score += (row["saves"] // 3) + (row["penalties_saved"] * 5)
+                score += (row["penalties_missed"] * (-2)) + (row["own_goals"] * (-2))
+                score += -(row["goals_conceded"] // 2)
+                
+            if row["position"] == 1:
+                score += (row["goals_scored"] * 6) + (row["assists"] * 3)
+                score += row["clean_sheets"] * 4
+                score += -(row["goals_conceded"] // 2)
+                
+            if row["position"] == 2:
+                score += (row["goals_scored"] * 5) + (row["assists"] * 3)
+                score += row["clean_sheets"]
+                
+            if row["position"] == 3:
+                score += (row["goals_scored"] * 4) + (row["assists"] * 3)
+
+            # Calculate score for bonus points
+            score += row["bonus"]
+
+            # Calculate score for yellow cards and red cards
+            score += (row["yellow_cards"] * (-1)) + (row["red_cards"] * (-3))
+            
+            # Own goals
+            score += row["own_goals"] * (-2)
+
+            return score
+        
+        self.data["points"] = self.data.apply(calculate_fpl_score, axis=1)
+ 
 
     def merge_dataframes_side_by_side(self) -> None:
         """
         Merges DataFrame rows side by side, appending suffixes for overlapping columns.
         """
-        dfs = pd.DataFrame()
-        for i in range(len(self.data) - self.overlap + 1):
-            df1 = self.data.iloc[[i]]
-            for j in range(1, self.overlap):
-                df2 = self.data.iloc[[i + j]]
-                df2_renamed = df2.rename(columns=lambda x: f"{x}_{j}")
-                df1 = pd.concat(
-                    [df1.reset_index(drop=True), df2_renamed.reset_index(drop=True)],
-                    axis=1,
-                )
+        if self.overlap > 1:
+        
+            dfs = pd.DataFrame()
+            for i in range(len(self.data) - self.overlap + 1):
+                df1 = self.data.iloc[[i]]
+                for j in range(1, self.overlap):
+                    df2 = self.data.iloc[[i + j]]
+                    df2_renamed = df2.rename(columns=lambda x: f"{x}_{j}")
+                    df1 = pd.concat(
+                        [df1.reset_index(drop=True), df2_renamed.reset_index(drop=True)],
+                        axis=1,
+                    )
 
-            dfs = pd.concat([dfs, df1], ignore_index=True)
-
-        self.data = dfs
+                dfs = pd.concat([dfs, df1], ignore_index=True)
+                
+            self.data = dfs
+        else:
+            pass
 
     def append_df_to_csv(self, csv_file_path: str) -> None:
         """
@@ -161,7 +224,7 @@ def process_all_csv_files(directory: str, output_csv: str, overlap: int) -> None
 
 class DataProcessor:
     def __init__(self, filename, target_col):
-        self.df = pd.read_csv(filename)  # .iloc[0:1000]
+        self.df = pd.read_csv(filename)
         self.target_col = target_col
 
     def process(self):
@@ -171,6 +234,9 @@ class DataProcessor:
 
         ender = "_" + self.target_col.rsplit("_")[-1]
         cols_to_drop = [col for col in X.columns if col.endswith(ender)]
+        
+        cols_to_keep = [""]
+        
         X = X.drop(cols_to_drop, axis=1)
        
         y = self.df[self.target_col]

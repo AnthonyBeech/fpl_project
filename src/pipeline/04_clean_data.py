@@ -10,7 +10,7 @@ from src.components.data_transformation import process_all_csv_files
 class Config:
     latest_dir: str = "data/latest/"
     raw_data_dir: str = "data/raw.csv"
-    overlap: int = 3
+    overlap: int = 50
 
 
 cfg = Config

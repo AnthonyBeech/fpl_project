@@ -138,12 +138,19 @@ class PlayerDataProcessor:
             fnm = sdata["elements"][ID]["first_name"]
             lnm = sdata["elements"][ID]["second_name"]
             nm = f"{fnm}_{lnm}.csv"
+            position = sdata["element_types"][sdata["elements"][ID]["element_type"] - 1]["id"]
 
             try:
                 df = pd.read_csv(f"{self.data_dir}/{nm}")
             except:
                 logging.error(f"File does not exist: {nm}")
                 continue
+            
+            try:
+                df = df.drop(['position'], axis=1)
+            except:
+                logging.warning(f"No position data to remove")
+                
 
             most_recent_kickoff = df["kickoff_time"].max()
 
@@ -160,7 +167,9 @@ class PlayerDataProcessor:
 
             dfr = pd.DataFrame(edata_r[:i])
             result_df = pd.concat([df, dfr], ignore_index=True)
+            result_df["position"] = position
             result_df.to_csv(f"{self.sum_dir}/{nm}")
+            
 
     def _get_data(self) -> dict:
         """

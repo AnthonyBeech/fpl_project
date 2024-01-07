@@ -11,7 +11,7 @@ class Config:
     data_dir: str = "data/"
     model_dir: str = "data/model.pkl"
     plot_dir: str = "plot/"
-    samples: int = 1000
+    samples: int = 9999999
 
 
 cfg = Config

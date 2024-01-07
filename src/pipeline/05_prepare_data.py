@@ -10,8 +10,8 @@ from src.components.data_transformation import DataProcessor
 @dataclass
 class Config:
     raw_data_dir: str = "data/raw.csv"
-    overlap: int = 3
-    target_col: str = "bps_" + str(overlap-1)
+    overlap: int = 1
+    target_col: str = "points_" + str(overlap-1) if overlap > 1 else "points"
     X_train_dir: str = "data/X_train.csv"
     X_test_dir: str = "data/X_test.csv"
     y_train_dir: str = "data/y_train.csv"

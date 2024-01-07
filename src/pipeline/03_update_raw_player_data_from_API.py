@@ -23,7 +23,7 @@ if __name__ == "__main__":
     if api_checker.is_changed():
         logging.info(f"Adding changes to latest dataset")
 
-        data_processor = PlayerDataProcessor(cfg.base_url, cfg.sum_dir, cfg.data_dir)
+        data_processor = PlayerDataProcessor(cfg.base_url, cfg.data_dir, cfg.sum_dir)
         try:
             data_processor.process_player_data()
             data_processor.rename()

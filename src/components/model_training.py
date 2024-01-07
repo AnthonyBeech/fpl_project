@@ -3,6 +3,7 @@ import shutil
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -26,8 +27,8 @@ class ModelTrainer:
 
         self.X_train = pd.read_csv(self.data_loc + "X_train.csv").values[:samples]
         self.y_train = pd.read_csv(self.data_loc + "y_train.csv").values.ravel()[:samples]
-        self.X_test = pd.read_csv(self.data_loc + "X_test.csv").values[:samples]
-        self.y_test = pd.read_csv(self.data_loc + "y_test.csv").values.ravel()[:samples]
+        self.X_test = pd.read_csv(self.data_loc + "X_test.csv").values[:samples//10]
+        self.y_test = pd.read_csv(self.data_loc + "y_test.csv").values.ravel()[:samples//10]
 
         logging.info(
             f"Model shapes are: {self.X_train.shape}, {self.X_test.shape}, {self.y_train.shape}, {self.y_test.shape}"
@@ -36,13 +37,21 @@ class ModelTrainer:
     def initiate_model_params(self):
         logging.info("Setting up models and params")
 
+        # self.models = {
+        #     "Random Forest": RandomForestRegressor(),
+        #     "Linear Regression": LinearRegression(),
+        # }
+
+        # self.params = {
+        #     "Random Forest": {"n_estimators": [128]},
+        #     "Linear Regression": {},
+        # }
+        
         self.models = {
-            "Random Forest": RandomForestRegressor(),
             "Linear Regression": LinearRegression(),
         }
 
         self.params = {
-            "Random Forest": {"n_estimators": [128]},
             "Linear Regression": {},
         }
 
@@ -95,7 +104,7 @@ class ModelEvaluater:
             y_test_pred = best_model.predict(X_test)
 
             self._plot_model_predicted(y_test, y_test_pred, model_name)
-            self._plot_model_predicted(y_train, y_train_pred, model_name + "train")
+            self._plot_model_predicted(y_train, y_train_pred, model_name + "_train")
 
 
             train_model_score = r2_score(y_train, y_train_pred)
@@ -112,8 +121,20 @@ class ModelEvaluater:
         sns.scatterplot(x=y, y=y_pred)
         plt.xlabel("True Values")
         plt.ylabel("Predictions")
+        plt.ylim(0, 10)
         plt.title(f"Predicted vs True Values - {model_name}")
-        plt.plot(y, y, color="red", linestyle="--")  # Add this line
+        
+        # Calculate the coefficients (slope and intercept) for the line of best fit
+        slope, intercept = np.polyfit(y, y_pred, 1)
+        
+        # Plot the line of best fit
+        plt.plot(y, slope * y + intercept, color="red", linestyle="--", label="Best Fit Line")
+        
+        # Plot the ideal fit line (slope=1, intercept=0)
+        plt.plot(y, y, color="green", linestyle="--", label="Ideal Fit Line")
+        
+        plt.legend()  # Add a legend
+        
         self._save_plot(plt, f"predicted_vs_true_{model_name}.png")
 
     def _save_plot(self, plot, file_name):

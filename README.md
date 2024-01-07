@@ -11,3 +11,11 @@
     * src/pipeline/03_update_raw_player_data_from_API.py
 
 * To transform the data, run the following scripts. This will be changed to a pipeline in a later version.
+    * src/pipeline/04_clean_data.py
+    * src/pipeline/05_prepare_data.py
+
+* To train a series of regression models through a grid of params run the following scripts:
+    * src/pipeline/06_train_models.py
+
+* Some Neural nets are also being tested here:
+    * src/custom_models
